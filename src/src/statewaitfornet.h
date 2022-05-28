@@ -9,8 +9,6 @@ public:
     StateWaitForNet();
     ~StateWaitForNet();
 
-    //static StateWaitForNet &Instance();
-
     uint8_t State() const;
 
     void StateChanged(const uint8_t prevstate, void *params);

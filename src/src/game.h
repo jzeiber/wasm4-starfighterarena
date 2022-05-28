@@ -58,14 +58,23 @@ public:
 
 private:
 
+	struct changestate
+	{
+		int8_t m_newstate;
+		void *m_params;
+	};
+
 	uint64_t m_ticks;
 
 	IState *m_playerstate[4];
+	changestate m_changestate[4];
 	fpoint2d m_stars[100];
 
 	DynamicArray<projectile> m_projectiles;
 
 	bool CheckCollision(const uint8_t playerindex, const uint32_t projectileindex) const;
 	double WrapPositive(const double val, const double max) const;
+
+	void HandleChangeState();
 
 };

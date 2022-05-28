@@ -71,14 +71,6 @@ bool StateGamePlayer::HandleInput(const Input *input, const uint8_t playerindex)
         {
             m_impulse=0.01;
             m_impulserot=m_rot;
-            /*
-            m_vel+=0.01+(m_vel*0.01);
-            if(m_vel>1.5)
-            {
-                m_vel=1.5;
-            }
-            m_energy-=m_vel;
-            */
         }
     }
     if(input->GamepadButtonDown(playerindex+1,BUTTON_DOWN)==true)
@@ -112,16 +104,6 @@ bool StateGamePlayer::HandleInput(const Input *input, const uint8_t playerindex)
                     m_lastshot=m_ticks;
                     m_stats.m_projectilesfired++;
                     m_energy-=25.0;
-                    /*
-                    for(int i=0; i<2; i++)
-                    {
-                        fpoint2d point;
-                        m_starfighter.WeaponCoord(i,1.0,m_rot,point);
-                        point.m_x+=m_x;
-                        point.m_y+=m_y;
-                        m_game->AddProjectile(playerindex,point,3.0,m_rot);
-                    }
-                    */
                 }
             }
         }
@@ -135,7 +117,6 @@ bool StateGamePlayer::HandleInput(const Input *input, const uint8_t playerindex)
     {
         if(m_status==STATUS_DEAD)
         {
-            // TODO - get location to spawn at
             Spawn();
         }
     }
@@ -195,7 +176,11 @@ void StateGamePlayer::Update(const int ticks, const uint8_t playerindex, Game *g
     }
     if(m_status==STATUS_DEAD)
     {
-        // TODO -if waiting too long - send back to code entry
+        // if waiting too long - send back to code entry
+        if(m_lastdead+3600 < m_ticks)
+        {
+            m_game->ChangeState(playerindex,Game::STATE_ENTERINGCODE,nullptr);
+        }
     }
 }
 
@@ -409,6 +394,7 @@ void StateGamePlayer::RegisterHitDestination(const Game::projectile &p, bool &ki
         killed=true;
         m_stats.m_deaths++;
         m_status=STATUS_DEAD;
+        m_lastdead=m_ticks;
     }
     else
     {

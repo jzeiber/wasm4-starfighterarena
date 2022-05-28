@@ -16,14 +16,6 @@ StateWaitForNet::~StateWaitForNet()
 
 }
 
-/*
-StateWaitForNet &StateWaitForNet::Instance()
-{
-    static StateWaitForNet state;
-    return state;
-}
-*/
-
 uint8_t StateWaitForNet::State() const
 {
     return Game::STATE_WAITINGFORNET;

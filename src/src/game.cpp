@@ -20,6 +20,8 @@ Game::Game():m_ticks(0)
 	{
 		//m_playerstate[i]=&StateWaitForNet::Instance();
 		m_playerstate[i]=new StateWaitForNet();
+		m_changestate[i].m_newstate=-1;
+		m_changestate[i].m_params=nullptr;
 	}
 	RandomMT r(0);
 	for(int i=0; i<countof(m_stars); i++)
@@ -36,30 +38,10 @@ Game::~Game()
 
 void Game::ChangeState(const uint8_t playerindex, const uint8_t newstate, void *params)
 {
-	if(newstate>=0 && newstate<STATE_MAX && newstate!=m_playerstate[playerindex]->State())
+	if(newstate>=0 && newstate<STATE_MAX && newstate!=m_playerstate[playerindex]->State() && playerindex>=0 && playerindex<countof(m_changestate))
 	{
-		const uint8_t oldstate=m_playerstate[playerindex]->State();
-		delete m_playerstate[playerindex];
-		m_playerstate[playerindex]=nullptr;
-
-		switch(newstate)
-		{
-		case STATE_WAITINGFORNET:
-			//m_playerstate[playerindex]=&StateWaitForNet::Instance();
-			m_playerstate[playerindex]=new StateWaitForNet();
-			m_playerstate[playerindex]->StateChanged(oldstate,params);
-			break;
-		case STATE_ENTERINGCODE:
-			m_playerstate[playerindex]=new StateEnteringCode();
-			m_playerstate[playerindex]->StateChanged(oldstate,params);
-			break;
-		case STATE_PLAYING:
-			m_playerstate[playerindex]=new StateGamePlayer();
-			m_playerstate[playerindex]->StateChanged(oldstate,params);
-			break;
-		default:
-			trace("Game::ChangeState State not impelemented!");
-		}
+		m_changestate[playerindex].m_newstate=newstate;
+		m_changestate[playerindex].m_params=params;
 	}
 }
 
@@ -117,6 +99,8 @@ void Game::Update(const int ticks, const uint8_t nothing, Game *game)
 	{
 		m_playerstate[i]->Update(ticks,i,game);
 	}
+
+	HandleChangeState();
 
 }
 
@@ -227,7 +211,7 @@ bool Game::CheckCollision(const uint8_t playerindex, const uint32_t projectilein
 		return true;
 	}
 
-	// TODO - check line collision with previous point and this point against circle in case shot grazes by circle
+	// TODO - check line segment collision with previous point and this point against circle in case shot grazes by circle
 
 	return false;
 
@@ -295,14 +279,15 @@ void Game::DrawLeaderboard(const int32_t x, const int32_t y, const int32_t width
 				ostr << "You";
 			}
 			tp.Print(ostr.Buffer(),x+2,y+12+(10*i),ostr.TextLength(),PALETTE_WHITE);
+
 			ostr.Clear();
 			ostr << ((StateGamePlayer *)m_playerstate[draworder[i]])->GetStats().m_kills;
 			tp.PrintWrapped(ostr.Buffer(),x+width-110,y+12+(i*10),ostr.TextLength(),45,PALETTE_WHITE,TextPrinter::JUSTIFY_RIGHT);
-			//tp.Print(ostr.Buffer(),x+width-80,y+12+(i*10),ostr.TextLength(),PALETTE_WHITE);
+
 			ostr.Clear();
 			ostr << ((StateGamePlayer *)m_playerstate[draworder[i]])->GetStats().m_deaths;
 			tp.PrintWrapped(ostr.Buffer(),x+width-70,y+12+(i*10),ostr.TextLength(),60,PALETTE_WHITE,TextPrinter::JUSTIFY_RIGHT);
-			//tp.Print(ostr.Buffer(),x+width-40,y+12+(i*10),ostr.TextLength(),PALETTE_WHITE);
+
 		}
 	}
 
@@ -352,4 +337,38 @@ double Game::WrapPositive(const double val, const double max) const
 		n-=max;
 	}
 	return n;
+}
+
+void Game::HandleChangeState()
+{
+	for(int i=0; i<countof(m_changestate); i++)
+	{
+		if(m_changestate[i].m_newstate>=0 && m_changestate[i].m_newstate!=m_playerstate[i]->State())
+		{
+			const uint8_t oldstate=m_playerstate[i]->State();
+			delete m_playerstate[i];
+			m_playerstate[i]=nullptr;
+
+			switch(m_changestate[i].m_newstate)
+			{
+			case STATE_WAITINGFORNET:
+				m_playerstate[i]=new StateWaitForNet();
+				m_playerstate[i]->StateChanged(oldstate,m_changestate[i].m_params);
+				break;
+			case STATE_ENTERINGCODE:
+				m_playerstate[i]=new StateEnteringCode();
+				m_playerstate[i]->StateChanged(oldstate,m_changestate[i].m_params);
+				break;
+			case STATE_PLAYING:
+				m_playerstate[i]=new StateGamePlayer();
+				m_playerstate[i]->StateChanged(oldstate,m_changestate[i].m_params);
+				break;
+			default:
+				trace("Game::HandleChangeState State not impelemented!");
+			}
+
+			m_changestate[i].m_newstate=-1;
+			m_changestate[i].m_params=nullptr;
+		}
+	}
 }
