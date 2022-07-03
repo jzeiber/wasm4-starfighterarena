@@ -1,6 +1,12 @@
 # Starfighter Arena
 Multiplayer space battle for WASM-4 fantasy game console
 
+Create your ship here
+https://jzeiber.github.io/wasm4-starfightercreator/bundle/
+
+Play the game with your ship here
+https://jzeiber.github.io/wasm4-starfighterarena/bundle/
+
 ![Screenshot](https://github.com/jzeiber/wasm4-starfighterarena/raw/main/images/screenshot1.png "Screenshot")
 
 # Gameplay
