@@ -14,7 +14,7 @@ Starfighter Arena is a multiplayer only game.  You can start a new game and init
 
 After connecting to a multiplayer session, you can enter the security code of a ship you've previously created with the Starfighter Ship Creator, or choose one of the preset ships at the bottom of the screen.  Use the up/down/left/right controls to move the selected letter and press button 1 to choose the letter.  You can press button 2 to move back a letter if you've made a mistake.  After you've typed in a valid code for your ship you will be able to continue to the game.
 
-In the area, your ship will be in the center of the screen.  You can press the up button to move forward, and the left or right buttons to rotate the ship.  Pressing and holding button 1 will fire the weapons of your ship.
+In the arena, your ship will be in the center of the screen.  You can press the up button to move forward, and the left or right buttons to rotate the ship.  Pressing and holding button 1 will fire the weapons of your ship.
 
 Your ship has a limited amount of energy, shown in the bar on the bottom of the screen.  When this bar reaches 0, your ship will be destroyed.  Energy is constantly replenished by your ship reactors, but moving and firing weapons will deplete your energy.  Your energy will also be depleted if your shields are hit by an enemies weapons.
 
