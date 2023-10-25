@@ -52,9 +52,9 @@ public:
 	uint8_t PlayerCount() const;
 
 	void AddProjectile(const uint8_t playerindex, const fpoint2d &point, const float vel, const float rotrad);
-	void DrawProjectiles(const float cx, const float cy);		// draws projectiles offset by position cx,cy at center of screen
+	void DrawProjectiles(const float cx, const float cy, const float drawscale);		// draws projectiles offset by position cx,cy at center of screen
 	void DrawLeaderboard(const int32_t x, const int32_t y, const int32_t width, const bool border);
-	void DrawStarfield(const float x, const float y);
+	void DrawStarfield(const float x, const float y, const float drawscale);
 
 private:
 
@@ -68,7 +68,7 @@ private:
 
 	IState *m_playerstate[4];
 	changestate m_changestate[4];
-	fpoint2d m_stars[100];
+	fpoint2d m_stars[120];
 
 	DynamicArray<projectile> m_projectiles;
 

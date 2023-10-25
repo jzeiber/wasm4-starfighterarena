@@ -10,7 +10,7 @@
 #include "wasmmath.h"
 #include "randommt.h"
 
-StateGamePlayer::StateGamePlayer():m_ticks(0),m_lastshot(0),m_lastdead(0),m_nextweapon(0),m_x(0),m_y(0),m_rot(0),m_vel(0),m_velrot(0),m_impulse(0),m_impulserot(0),m_status(STATUS_DEAD),m_energy(0),m_allowshoot(false),m_showhud(false),m_showstats(false)
+StateGamePlayer::StateGamePlayer():m_ticks(0),m_lastshot(0),m_lastdead(0),m_nextweapon(0),m_x(0),m_y(0),m_rot(0),m_vel(0),m_velrot(0),m_impulse(0),m_impulserot(0),m_status(STATUS_DEAD),m_energy(0),m_allowshoot(false),m_showhud(false),m_showstats(false),m_drawscale(0.5)
 {
 
 }
@@ -93,13 +93,23 @@ bool StateGamePlayer::HandleInput(const Input *input, const uint8_t playerindex)
         {
             if(m_lastshot+10u<=m_ticks)
             {
-                if(m_energy>20.0)
+                if(m_energy>25.0)
                 {
                     fpoint2d point;
                     m_starfighter.WeaponCoord(m_nextweapon,1.0,m_rot,point);
                     point.m_x+=m_x;
                     point.m_y+=m_y;
-                    m_game->AddProjectile(playerindex,point,3.0,m_rot);
+
+                    // add components of ship velocity to projectile velocity
+                    const float px=_cos(m_rot)*3.0f;
+                    const float py=_sin(m_rot)*3.0f;
+                    const float vx=_cos(m_velrot)*m_vel;
+                    const float vy=_sin(m_velrot)*m_vel;
+                    const float v=_sqrt(((px+vx)*(px+vx))+((py+vy)*(py+vy)));  // final projectile velocity
+                    const float r=_atan2(py+vy,px+vx);                       // projectile direction
+
+                    //m_game->AddProjectile(playerindex,point,3.0,m_rot);
+                    m_game->AddProjectile(playerindex,point,v,r);
                     m_nextweapon==1 ? m_nextweapon=0 : m_nextweapon++;
                     m_lastshot=m_ticks;
                     m_stats.m_projectilesfired++;
@@ -173,6 +183,27 @@ void StateGamePlayer::Update(const int ticks, const uint8_t playerindex, Game *g
             m_x+=_cos(m_velrot)*m_vel*ticks;
             m_y+=_sin(m_velrot)*m_vel*ticks;
         }
+
+        // zoom in/out when stationary/moving
+        if(m_vel>0.0)
+        {
+            if(m_drawscale>0.6)
+            {
+                m_drawscale-=0.01;
+            }
+        }
+        else if(m_drawscale<1.0)
+        {
+            m_drawscale+=0.005;
+        }
+        if(m_drawscale<0.6)
+        {
+            m_drawscale=0.6;
+        }
+        if(m_drawscale>1.0)
+        {
+            m_drawscale=1.0;
+        }
     }
     if(m_status==STATUS_DEAD)
     {
@@ -188,10 +219,10 @@ void StateGamePlayer::Draw()
 {
     if(m_status==STATUS_ALIVE)
     {
-        m_game->DrawStarfield(m_x,m_y);
+        m_game->DrawStarfield(m_x,m_y,m_drawscale);
 
-        DrawShip(SCREEN_SIZE/2,SCREEN_SIZE/2,1.0);
-        DrawShield(SCREEN_SIZE/2,SCREEN_SIZE/2,1.0);
+        DrawShip(SCREEN_SIZE/2,SCREEN_SIZE/2,m_drawscale);
+        DrawShield(SCREEN_SIZE/2,SCREEN_SIZE/2,m_drawscale);
 
         for(int i=0; i<m_game->PlayerCount(); i++)
         {
@@ -201,15 +232,15 @@ void StateGamePlayer::Draw()
                 StateGamePlayer *gs=static_cast<StateGamePlayer *>(ps);
                 if(gs->Status()==STATUS_ALIVE)
                 {
-                    float dx=gs->PlayerX()-m_x;
-                    float dy=gs->PlayerY()-m_y;
-                    gs->DrawShip((SCREEN_SIZE/2)+dx,(SCREEN_SIZE/2)+dy,1.0);
-                    gs->DrawShield((SCREEN_SIZE/2)+dx,(SCREEN_SIZE/2)+dy,1.0);
+                    float dx=(gs->PlayerX()-m_x)*m_drawscale;
+                    float dy=(gs->PlayerY()-m_y)*m_drawscale;
+                    gs->DrawShip((SCREEN_SIZE/2)+dx,(SCREEN_SIZE/2)+dy,m_drawscale);
+                    gs->DrawShield((SCREEN_SIZE/2)+dx,(SCREEN_SIZE/2)+dy,m_drawscale);
                 }
             }
         }
 
-        m_game->DrawProjectiles(m_x,m_y);
+        m_game->DrawProjectiles(m_x,m_y,m_drawscale);
 
         DrawEnergy((SCREEN_SIZE/2)-15,SCREEN_SIZE-5,30,2);
         if(m_showhud==true)
@@ -350,6 +381,7 @@ void StateGamePlayer::Spawn()
     m_lastshot=0;
     m_vel=0;
     m_impulse=0;
+    m_drawscale=1.0;
 
     RandomMT rand(m_ticks);
     bool goodpos=false;

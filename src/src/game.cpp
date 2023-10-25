@@ -26,8 +26,8 @@ Game::Game():m_ticks(0)
 	RandomMT r(0);
 	for(int i=0; i<countof(m_stars); i++)
 	{
-		m_stars[i].m_x=r.NextDouble()*static_cast<float>(SCREEN_SIZE*2);
-		m_stars[i].m_y=r.NextDouble()*static_cast<float>(SCREEN_SIZE*2);
+		m_stars[i].m_x=r.NextDouble()*static_cast<float>(SCREEN_SIZE*4);
+		m_stars[i].m_y=r.NextDouble()*static_cast<float>(SCREEN_SIZE*4);
 	}
 }
 
@@ -168,13 +168,13 @@ void Game::AddProjectile(const uint8_t playerindex, const fpoint2d &point, const
 	m_projectiles.push_back(p);
 }
 
-void Game::DrawProjectiles(const float cx, const float cy)
+void Game::DrawProjectiles(const float cx, const float cy, const float drawscale)
 {
 	*DRAW_COLORS=PALETTE_WHITE;
 	for(int i=0; i<m_projectiles.size(); i++)
 	{
-		float dx=m_projectiles[i].m_pos.m_x-cx;
-		float dy=m_projectiles[i].m_pos.m_y-cy;
+		float dx=(m_projectiles[i].m_pos.m_x-cx)*drawscale;
+		float dy=(m_projectiles[i].m_pos.m_y-cy)*drawscale;
 		float x=(SCREEN_SIZE/2)+dx;
 		float y=(SCREEN_SIZE/2)+dy;
 		if(x>=0 && y>=0 && x<SCREEN_SIZE && y<SCREEN_SIZE)
@@ -293,33 +293,43 @@ void Game::DrawLeaderboard(const int32_t x, const int32_t y, const int32_t width
 
 }
 
-void Game::DrawStarfield(const float x, const float y)
+void Game::DrawStarfield(const float x, const float y, const float drawscale)
 {
-	const double maxval=SCREEN_SIZE*2;
+	const double maxval=SCREEN_SIZE*4;
 	*DRAW_COLORS=PALETTE_DARKGREY;
 
-	float dx1=WrapPositive(_fmod(x*.8,maxval),maxval);
-	float dy1=WrapPositive(_fmod(y*.8,maxval),maxval);
-	float dx2=WrapPositive(_fmod(x*.5,maxval),maxval);
-	float dy2=WrapPositive(_fmod(y*.5,maxval),maxval);
+	float dx[4];
+	float dy[4];
+	float mult[4]={0.8,0.6,0.4,0.2};
 
-	for(int i=0; i<50; i++)
+	for(int i=0; i<countof(mult); i++)
 	{
-		fpoint2d p1(WrapPositive(m_stars[i].m_x-dx1,maxval),WrapPositive(m_stars[i].m_y-dy1,maxval));
-
-		if(p1.m_x>=0 && p1.m_x<SCREEN_SIZE && p1.m_y>=0 && p1.m_y<SCREEN_SIZE)
-		{
-			line(p1.m_x,p1.m_y,p1.m_x,p1.m_y);
-		}
+		dx[i]=WrapPositive(_fmod(x*mult[i],maxval),maxval);
+		dy[i]=WrapPositive(_fmod(y*mult[i],maxval),maxval);
 	}
 
-	for(int i=50; i<countof(m_stars); i++)
+	for(int j=0; j<countof(mult); j++)
 	{
-		fpoint2d p1(WrapPositive(m_stars[i].m_x-dx2,maxval),WrapPositive(m_stars[i].m_y-dy2,maxval));
-
-		if(p1.m_x>=0 && p1.m_x<SCREEN_SIZE && p1.m_y>=0 && p1.m_y<SCREEN_SIZE)
+		for(int i=(j*30); i<((j+1)*30); i++)
 		{
-			line(p1.m_x,p1.m_y,p1.m_x,p1.m_y);
+			fpoint2d p1(WrapPositive(m_stars[i].m_x-dx[j],maxval),WrapPositive(m_stars[i].m_y-dy[j],maxval));
+
+			// we need to shift the pos off the screen top/left because starting coords are +
+			p1.m_x-=(maxval/2.0);
+			p1.m_y-=(maxval/2.0);
+
+			// apply scaling to the coords
+			p1.m_x*=drawscale;
+			p1.m_y*=drawscale;
+
+			// add back half screen size so starfield zoom is centered on screen
+			p1.m_x+=(SCREEN_SIZE/2);
+			p1.m_y+=(SCREEN_SIZE/2);
+
+			if(p1.m_x>=0 && p1.m_x<SCREEN_SIZE && p1.m_y>=0 && p1.m_y<SCREEN_SIZE)
+			{
+				line(p1.m_x,p1.m_y,p1.m_x,p1.m_y);
+			}
 		}
 	}
 

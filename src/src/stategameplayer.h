@@ -77,5 +77,6 @@ private:
     bool m_allowshoot;
     bool m_showhud;
     bool m_showstats;
+    float m_drawscale;
 
 };
